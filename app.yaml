@@ -1,0 +1,9 @@
+service: risk-management-backend
+runtime: php72
+
+env_variables:
+  ## Put production environment variables here.
+  APP_KEY: HN8zsJ3klLsj8xfuPpV9EcgtqBgFjsWmUmhV4y2m+9U=
+  APP_STORAGE: /tmp
+  VIEW_COMPILED_PATH: /tmp
+  SESSION_DRIVER: cookie
