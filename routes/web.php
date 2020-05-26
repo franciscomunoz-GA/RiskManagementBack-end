@@ -14,9 +14,3 @@
 Route::get('/', function () {
     return view('welcome');
 });
-Route::post('/validarUsuario','loginController@validarUsuario');
-Route::post('/sesionUsuario','loginController@sesionUsuario');
-Route::post('/obtenerMenus','loginController@obtenerMenus');
-Route::post('/obtenerSubmenus','loginController@obtenerSubmenusXMenu');
-Route::post('/obtenerTickets','ticketController@obtenerTickets');
-

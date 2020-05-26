@@ -14,14 +14,14 @@ class RiskTypesModel extends Model
             ['name', '=', $Nombre],
             ['status_delete',   '=', 1]
         ];
-        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.risk_types', 
+        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.rm_risk_types', 
                                       'Condicion' => $Condicion);
         $Duplicidad = $this->ValidarDuplicidad($ParametrosDuplicidad);
 
         switch($Duplicidad){
             case true:
                 try {
-                    $Id = DB::table('sysdev.risk_types')
+                    $Id = DB::table('sysdev.rm_risk_types')
                             ->insertGetId(['name'    => $Nombre,
                                            'user_id' => $IdUsuario
                                           ]);
@@ -49,14 +49,14 @@ class RiskTypesModel extends Model
             ['id',   '!=', $Id],
             ['status_delete', '=', 1]
         ];
-        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.risk_types', 
+        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.rm_risk_types', 
                                       'Condicion' => $Condicion);
         $Duplicidad = $this->ValidarDuplicidad($ParametrosDuplicidad);
 
         switch($Duplicidad){
             case true:
                 try {
-                    $Query = DB::table('sysdev.risk_types')
+                    $Query = DB::table('sysdev.rm_risk_types')
                                 ->where('id', $Id)
                                 ->update([
                                         'name' => $Nombre
@@ -80,7 +80,7 @@ class RiskTypesModel extends Model
         $Id     = $Parametros['Id'];
         $Accion = $Parametros['Accion'];
         try {
-        $Query = DB::table('sysdev.risk_types')
+        $Query = DB::table('sysdev.rm_risk_types')
                    ->where('id', $Id)
                    ->update([
                             'status' => $Accion
@@ -92,7 +92,7 @@ class RiskTypesModel extends Model
     }
 
     public function SeleccionarRiskTypes(){
-        $Query = $this->from('sysdev.risk_types AS RT')
+        $Query = $this->from('sysdev.rm_risk_types AS RT')
                       ->join('sysdev.users AS Usuario', 'Usuario.id', '=', 'RT.user_id')
                       ->select('RT.id        AS Id', 
                                'RT.name      AS Nombre',
@@ -109,7 +109,7 @@ class RiskTypesModel extends Model
 
     public function SeleccionarDRiskTypes($Parametros){
         $Id = $Parametros['Id'];
-        $Query = $this->from('sysdev.risk_types AS RT')
+        $Query = $this->from('sysdev.rm_risk_types AS RT')
                       ->select('RT.id   AS Id', 
                                'RT.name AS Nombre'
                                )
@@ -119,7 +119,7 @@ class RiskTypesModel extends Model
     }
 
     public function SeleccionarGRiskTypes(){
-        $Query = $this->from('sysdev.risk_types AS RT')
+        $Query = $this->from('sysdev.rm_risk_types AS RT')
                       ->select('RT.id   AS Id', 
                                'RT.name AS Nombre'
                                )
@@ -141,7 +141,7 @@ class RiskTypesModel extends Model
                         ['name', '=', trim(strtoupper($row))],
                         ['status_delete', '=', 1]
                         ];
-            $ParametrosDuplicidad = array('Tabla'     => 'sysdev.risk_types', 
+            $ParametrosDuplicidad = array('Tabla'     => 'sysdev.rm_risk_types', 
                                           'Condicion' => $Condicion);
             $Duplicidad = $this->ValidarDuplicidad($ParametrosDuplicidad);
     
@@ -160,7 +160,7 @@ class RiskTypesModel extends Model
                     break;            
             }
         }
-        $Query = DB::table('sysdev.risk_types')
+        $Query = DB::table('sysdev.rm_risk_types')
                    ->insert($data);
         return $Query;
         } catch (\Throwable $th) {
@@ -171,7 +171,7 @@ class RiskTypesModel extends Model
     public function Eliminar($Parametros){
         $Id     = $Parametros['Id'];
         try {
-        $Query = DB::table('sysdev.risk_types')
+        $Query = DB::table('sysdev.rm_risk_types')
                    ->where('id', $Id)
                    ->update([
                             'status' => 0,
@@ -199,6 +199,25 @@ class RiskTypesModel extends Model
             return $Resultado;
         } catch (\Throwable $th) {
             return 'Error al validar duplicidad';
+        }        
+    }
+    public function ValidarPermiso($Parametros){
+        $IdUsuario = $Parametros['IdUsuario'];
+        $Permiso   = $Parametros['Permiso'];        
+        try {
+            $Count = DB::table('sysdev.model_has_roles as model')
+                       ->join('sysdev.roles as roles', 'model.role_id', '=', 'roles.id')
+                       ->join('sysdev.role_has_permissions as relRolPermiso', 'relRolPermiso.role_id', '=', 'roles.id')
+                       ->join('sysdev.permissions as permiso', 'permiso.id', '=', 'relRolPermiso.permission_id')
+                    ->where([['model_id',     '=', $IdUsuario],
+                             ['permiso.name', '=', $Permiso]])
+                    ->count();
+            if($Count > 0)
+                return $Count;
+            else    
+                return 'No tiene permiso';
+        } catch (\Throwable $th) {
+            return 'Error al validar permiso';
         }        
     }
 }

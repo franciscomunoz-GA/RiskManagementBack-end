@@ -24,10 +24,35 @@ class loginController extends Controller
         $correo   = $request->input('Correo');
         $password = $request->input('Password');
         $loginModel = new loginModel;
-        $parametros = array('Correo'=>$correo,
+        $parametrosS = array('Correo'=>$correo,
                             'Password'=>$password);
-        $resultado = $loginModel->sesionUsuario($parametros);
-        
+        $session = $loginModel->sesionUsuario($parametrosS);
+        $parametrosP = array('IdUsuario'=>$session[0]['Id']);
+        $permisos = $loginModel->ObtenerPermisos($parametrosP);
+        $resultado = array('Sesion'    => $session,
+                           'Permisos'  => $permisos);
+        $retono = array('Success' => 'true',
+                        'Message' => 'Consulta Exitosa',
+                        'Data'    => $resultado);
+        return $retono;
+    }
+
+    public function AcutalizarSesion(Request $request){
+        $IdUsuario = $request->input('IdUsuario');
+        $loginModel = new loginModel;
+        $parametros = array('IdUsuario'=>$IdUsuario);
+        $resultado = $loginModel->ActualizarSesion($parametros);
+        $retono = array('Success' => 'true',
+                        'Message' => 'Consulta Exitosa',
+                        'Data'    => $resultado);
+        return $retono;
+    }
+
+    public function CerrarSesion(Request $request){
+        $IdUsuario = $request->input('IdUsuario');
+        $loginModel = new loginModel;
+        $parametros = array('IdUsuario'=>$IdUsuario);
+        $resultado = $loginModel->CerrarSesion($parametros);
         $retono = array('Success' => 'true',
                         'Message' => 'Consulta Exitosa',
                         'Data'    => $resultado);

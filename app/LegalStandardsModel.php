@@ -14,14 +14,14 @@ class LegalStandardsModel extends Model
             ['name', '=', $Nombre],
             ['status_delete',   '=', 1]
         ];
-        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.legal_standards', 
+        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.rm_legal_standards', 
                                       'Condicion' => $Condicion);
         $Duplicidad = $this->ValidarDuplicidad($ParametrosDuplicidad);
 
         switch($Duplicidad){
             case true:
                 try {
-                    $Id = DB::table('sysdev.legal_standards')
+                    $Id = DB::table('sysdev.rm_legal_standards')
                             ->insertGetId(['name'    => $Nombre,
                                            'user_id' => $IdUsuario
                                           ]);
@@ -49,14 +49,14 @@ class LegalStandardsModel extends Model
             ['id',   '!=', $Id],
             ['status_delete', '=', 1]
         ];
-        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.legal_standards', 
+        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.rm_legal_standards', 
                                       'Condicion' => $Condicion);
         $Duplicidad = $this->ValidarDuplicidad($ParametrosDuplicidad);
 
         switch($Duplicidad){
             case true:
                 try {
-                    $Query = DB::table('sysdev.legal_standards')
+                    $Query = DB::table('sysdev.rm_legal_standards')
                                 ->where('id', $Id)
                                 ->update([
                                         'name' => $Nombre
@@ -80,7 +80,7 @@ class LegalStandardsModel extends Model
         $Id     = $Parametros['Id'];
         $Accion = $Parametros['Accion'];
         try {
-        $Query = DB::table('sysdev.legal_standards')
+        $Query = DB::table('sysdev.rm_legal_standards')
                    ->where('id', $Id)
                    ->update([
                             'status' => $Accion
@@ -92,7 +92,7 @@ class LegalStandardsModel extends Model
     }
 
     public function SeleccionarLegalStandard(){
-        $Query = $this->from('sysdev.legal_standards AS LS')
+        $Query = $this->from('sysdev.rm_legal_standards AS LS')
                       ->join('sysdev.users AS Usuario', 'Usuario.id', '=', 'LS.user_id')
                       ->select('LS.id        AS Id', 
                                'LS.name      AS Nombre',
@@ -109,7 +109,7 @@ class LegalStandardsModel extends Model
 
     public function SeleccionarDLegalStandard($Parametros){
         $Id = $Parametros['Id'];
-        $Query = $this->from('sysdev.legal_standards AS LS')
+        $Query = $this->from('sysdev.rm_legal_standards AS LS')
                       ->select('LS.id   AS Id', 
                                'LS.name AS Nombre'
                                )
@@ -119,7 +119,7 @@ class LegalStandardsModel extends Model
     }
 
     public function SeleccionarGLegalStandard(){
-        $Query = $this->from('sysdev.legal_standards AS LS')
+        $Query = $this->from('sysdev.rm_legal_standards AS LS')
                       ->select('LS.id   AS Id', 
                                'LS.name AS Nombre'
                                )
@@ -141,7 +141,7 @@ class LegalStandardsModel extends Model
                         ['name', '=', trim(strtoupper($row))],
                         ['status_delete', '=', 1]
                         ];
-            $ParametrosDuplicidad = array('Tabla'     => 'sysdev.legal_standards', 
+            $ParametrosDuplicidad = array('Tabla'     => 'sysdev.rm_legal_standards', 
                                           'Condicion' => $Condicion);
             $Duplicidad = $this->ValidarDuplicidad($ParametrosDuplicidad);
     
@@ -160,7 +160,7 @@ class LegalStandardsModel extends Model
                     break;            
             }
         }
-        $Query = DB::table('sysdev.legal_standards')
+        $Query = DB::table('sysdev.rm_legal_standards')
                    ->insert($data);
         return $Query;
         } catch (\Throwable $th) {
@@ -171,7 +171,7 @@ class LegalStandardsModel extends Model
     public function Eliminar($Parametros){
         $Id     = $Parametros['Id'];
         try {
-        $Query = DB::table('sysdev.legal_standards')
+        $Query = DB::table('sysdev.rm_legal_standards')
                    ->where('id', $Id)
                    ->update([
                             'status' => 0,
@@ -199,6 +199,25 @@ class LegalStandardsModel extends Model
             return $Resultado;
         } catch (\Throwable $th) {
             return 'Error al validar duplicidad';
+        }        
+    }
+    public function ValidarPermiso($Parametros){
+        $IdUsuario = $Parametros['IdUsuario'];
+        $Permiso   = $Parametros['Permiso'];        
+        try {
+            $Count = DB::table('sysdev.model_has_roles as model')
+                       ->join('sysdev.roles as roles', 'model.role_id', '=', 'roles.id')
+                       ->join('sysdev.role_has_permissions as relRolPermiso', 'relRolPermiso.role_id', '=', 'roles.id')
+                       ->join('sysdev.permissions as permiso', 'permiso.id', '=', 'relRolPermiso.permission_id')
+                    ->where([['model_id',     '=', $IdUsuario],
+                             ['permiso.name', '=', $Permiso]])
+                    ->count();
+            if($Count > 0)
+                return $Count;
+            else    
+                return 'No tiene permiso';
+        } catch (\Throwable $th) {
+            return 'Error al validar permiso';
         }        
     }
 }

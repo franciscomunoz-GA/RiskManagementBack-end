@@ -14,14 +14,14 @@ class DimensionsModel extends Model
             ['name', '=', $Nombre],
             ['status_delete',   '=', 1]
         ];
-        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.dimensions', 
+        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.rm_dimensions', 
                                       'Condicion' => $Condicion);
         $Duplicidad = $this->ValidarDuplicidad($ParametrosDuplicidad);
 
         switch($Duplicidad){
             case true:
                 try {
-                    $Id = DB::table('sysdev.dimensions')
+                    $Id = DB::table('sysdev.rm_dimensions')
                             ->insertGetId(['name'    => $Nombre,
                                            'user_id' => $IdUsuario
                                           ]);
@@ -49,14 +49,14 @@ class DimensionsModel extends Model
             ['id',   '!=', $Id],
             ['status_delete', '=', 1]
         ];
-        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.dimensions', 
+        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.rm_dimensions', 
                                       'Condicion' => $Condicion);
         $Duplicidad = $this->ValidarDuplicidad($ParametrosDuplicidad);
 
         switch($Duplicidad){
             case true:
                 try {
-                    $Query = DB::table('sysdev.dimensions')
+                    $Query = DB::table('sysdev.rm_dimensions')
                                 ->where('id', $Id)
                                 ->update([
                                         'name'  => $Nombre
@@ -80,7 +80,7 @@ class DimensionsModel extends Model
         $Id        = $Parametros['Id'];
         $Accion    = $Parametros['Accion'];
         try {
-        $Query = DB::table('sysdev.dimensions')
+        $Query = DB::table('sysdev.rm_dimensions')
                    ->where('id', $Id)
                    ->update([
                             'status' => $Accion
@@ -92,7 +92,7 @@ class DimensionsModel extends Model
     }
 
     public function SeleccionarDimensions(){
-        $Query = $this->from('sysdev.dimensions AS Dimensions')
+        $Query = $this->from('sysdev.rm_dimensions AS Dimensions')
                       ->join('sysdev.users AS Usuario', 'Usuario.id', '=', 'Dimensions.user_id')
                       ->select('Dimensions.id    AS Id', 
                                'Dimensions.name  AS Nombre',
@@ -109,7 +109,7 @@ class DimensionsModel extends Model
 
     public function SeleccionarDDimension($Parametros){
         $Id = $Parametros['Id'];
-        $Query = $this->from('sysdev.dimensions AS Dimensions')
+        $Query = $this->from('sysdev.rm_dimensions AS Dimensions')
                       ->select('Dimensions.id   AS Id', 
                                'Dimensions.name AS Nombre'
                                )
@@ -119,7 +119,7 @@ class DimensionsModel extends Model
     }
 
     public function SeleccionarGDimensions(){
-        $Query = $this->from('sysdev.dimensions AS Dimensions')
+        $Query = $this->from('sysdev.rm_dimensions AS Dimensions')
                       ->select('Dimensions.id   AS Id', 
                                'Dimensions.name AS Nombre'
                                )
@@ -141,7 +141,7 @@ class DimensionsModel extends Model
                         ['name', '=', trim(strtoupper($row))],
                         ['status_delete', '=', 1]
                         ];
-            $ParametrosDuplicidad = array('Tabla'     => 'sysdev.dimensions', 
+            $ParametrosDuplicidad = array('Tabla'     => 'sysdev.rm_dimensions', 
                                           'Condicion' => $Condicion);
             $Duplicidad = $this->ValidarDuplicidad($ParametrosDuplicidad);
     
@@ -160,7 +160,7 @@ class DimensionsModel extends Model
                     break;            
             }
         }
-        $Query = DB::table('sysdev.dimensions')
+        $Query = DB::table('sysdev.rm_dimensions')
                    ->insert($data);
         return $Query;
     } catch (\Throwable $th) {
@@ -171,7 +171,7 @@ class DimensionsModel extends Model
     public function Eliminar($Parametros){
         $Id     = $Parametros['Id'];
         try {
-        $Query = DB::table('sysdev.dimensions')
+        $Query = DB::table('sysdev.rm_dimensions')
                    ->where('id', $Id)
                    ->update([
                             'status' => 0,
@@ -199,6 +199,25 @@ class DimensionsModel extends Model
             return $Resultado;
         } catch (\Throwable $th) {
             return 'Error al validar duplicidad';
+        }        
+    }
+    public function ValidarPermiso($Parametros){
+        $IdUsuario = $Parametros['IdUsuario'];
+        $Permiso   = $Parametros['Permiso'];        
+        try {
+            $Count = DB::table('sysdev.model_has_roles as model')
+                       ->join('sysdev.roles as roles', 'model.role_id', '=', 'roles.id')
+                       ->join('sysdev.role_has_permissions as relRolPermiso', 'relRolPermiso.role_id', '=', 'roles.id')
+                       ->join('sysdev.permissions as permiso', 'permiso.id', '=', 'relRolPermiso.permission_id')
+                    ->where([['model_id',     '=', $IdUsuario],
+                             ['permiso.name', '=', $Permiso]])
+                    ->count();
+            if($Count > 0)
+                return $Count;
+            else    
+                return 'No tiene permiso';
+        } catch (\Throwable $th) {
+            return 'Error al validar permiso';
         }        
     }
 }

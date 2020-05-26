@@ -46,11 +46,11 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
-            'host' => env('DB_HOST', '35.222.37.27'),
+            'host' => env('DB_HOST', '35.222.37.27'), // '35.222.37.27' '127.0.0.1'
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'sysdev'),
-            'username' => env('DB_USERNAME', 'rm_admin'),
-            'password' => env('DB_PASSWORD', '*Calti2020!'),
+            'username' => env('DB_USERNAME', 'rm_admin'), //'rm_admin' 'root'
+            'password' => env('DB_PASSWORD', '*Calti2020!'), //'*Calti2020!'  'Root12345'
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',

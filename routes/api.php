@@ -18,8 +18,10 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 //Login
-Route::post('/Validar/Usuario', 'loginController@validarUsuario');
-Route::post('/Sesion/Usuario',  'loginController@sesionUsuario');
+Route::post('/Actualizar/Seccion', 'loginController@AcutalizarSesion');
+Route::post('/Cerrar/Seccion',     'loginController@CerrarSesion');
+Route::post('/Validar/Usuario',    'loginController@validarUsuario');
+Route::post('/Sesion/Usuario',     'loginController@sesionUsuario');
 //Areas
 Route::post('/Eliminar/Areas',         'AreasController@Eliminar');
 Route::post('/Importar/Areas',         'AreasController@Importador');
@@ -28,6 +30,19 @@ Route::post('/Modificar/Areas',        'AreasController@Modificar');
 Route::post('/Modificar/AreasEstatus', 'AreasController@ModificarEstatus');
 Route::post('/Seleccionar/Areas',      'AreasController@Seleccionar');
 Route::post('/Seleccionar/AreasD',     'AreasController@SeleccionarDetalle');
+//Catalogo
+Route::post('/Seleccionar/ClientsG',      'CatalogosController@SeleccionarClientG');
+Route::post('/Seleccionar/SiteInterestG', 'CatalogosController@SeleccionarSitesInterestG');
+//ClientRiskAreas
+Route::post('/Eliminar/RelacionCRA',         'ClientsRiskAreaController@Eliminar');
+Route::post('/Importador/RelacionCRA',       'ClientsRiskAreaController@Importador');
+Route::post('/Insertar/RelacionCRA',         'ClientsRiskAreaController@Insertar');
+Route::post('/Modificar/RelacionCRA',        'ClientsRiskAreaController@Modificar');
+Route::post('/Modificar/RelacionCRAEstatus', 'ClientsRiskAreaController@ModificarEstatus');
+Route::post('/Seleccionar/CatalogosCRA',     'ClientsRiskAreaController@Catalogos');
+Route::post('/Seleccionar/RelacionCRA',      'ClientsRiskAreaController@Seleccionar');
+Route::post('/Seleccionar/RelacionCRAD',     'ClientsRiskAreaController@SeleccionarDetalle');
+Route::post('/Seleccionar/RelacionCRAG',     'ClientsRiskAreaController@SeleccionarGeneral');
 //Dimensions
 Route::post('/Eliminar/Dimensiones',         'DimensionsController@Eliminar');
 Route::post('/Importar/Dimensiones',         'DimensionsController@Importador');
@@ -54,6 +69,26 @@ Route::post('/Seleccionar/CatalogosR', 'RiskController@Catalogos');
 Route::post('/Seleccionar/Risk',       'RiskController@Seleccionar');
 Route::post('/Seleccionar/RiskD',      'RiskController@SeleccionarDetalle');
 Route::post('/Seleccionar/RiskG',      'RiskController@SeleccionarGeneral');
+//RiskAreas
+Route::post('/Eliminar/RelacionRA',         'RiskAreaController@Eliminar');
+Route::post('/Importador/RelacionRA',       'RiskAreaController@Importador');
+Route::post('/Insertar/RelacionRA',         'RiskAreaController@Insertar');
+Route::post('/Modificar/RelacionRA',        'RiskAreaController@Modificar');
+Route::post('/Modificar/RelacionRAEstatus', 'RiskAreaController@ModificarEstatus');
+Route::post('/Seleccionar/CatalogosRA',     'RiskAreaController@Catalogos');
+Route::post('/Seleccionar/RelacionRA',      'RiskAreaController@Seleccionar');
+Route::post('/Seleccionar/RelacionRAD',     'RiskAreaController@SeleccionarDetalle');
+Route::post('/Seleccionar/RelacionRAG',     'RiskAreaController@SeleccionarGeneral');
+//RiskSiteInterest 
+Route::post('/Eliminar/RelacionRSI',         'RiskSiteInterestController@Eliminar');
+Route::post('/Importador/RelacionRSI',       'RiskSiteInterestController@Importador');
+Route::post('/Insertar/RelacionRSI',         'RiskSiteInterestController@Insertar');
+Route::post('/Modificar/RelacionRSI',        'RiskSiteInterestController@Modificar');
+Route::post('/Modificar/RelacionRSIEstatus', 'RiskSiteInterestController@ModificarEstatus');
+Route::post('/Seleccionar/CatalogosRSI',     'RiskSiteInterestController@Catalogos');
+Route::post('/Seleccionar/RelacionRSI',      'RiskSiteInterestController@Seleccionar');
+Route::post('/Seleccionar/RelacionRSID',     'RiskSiteInterestController@SeleccionarDetalle');
+Route::post('/Seleccionar/RelacionRSIG',     'RiskSiteInterestController@SeleccionarGeneral');
 //RiskTypes
 Route::post('/Eliminar/RiskTypes',         'RiskTypesController@Eliminar');
 Route::post('/Importar/RiskTypes',         'RiskTypesController@Importador');

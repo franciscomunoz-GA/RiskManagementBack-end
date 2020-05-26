@@ -14,14 +14,14 @@ class AreasModel extends Model
             ['name', '=', $Nombre],
             ['status_delete',   '=', 1]
         ];
-        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.areas', 
+        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.rm_areas', 
                                       'Condicion' => $Condicion);
         $Duplicidad = $this->ValidarDuplicidad($ParametrosDuplicidad);
 
         switch($Duplicidad){
             case true:
                 try {
-                    $Id = DB::table('sysdev.areas')
+                    $Id = DB::table('sysdev.rm_areas')
                             ->insertGetId(['name'    => $Nombre,
                                            'user_id' => $IdUsuario
                                           ]);
@@ -49,14 +49,14 @@ class AreasModel extends Model
             ['id',   '!=', $Id],
             ['status_delete', '=', 1]
         ];
-        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.areas', 
+        $ParametrosDuplicidad = array('Tabla'     => 'sysdev.rm_areas', 
                                       'Condicion' => $Condicion);
         $Duplicidad = $this->ValidarDuplicidad($ParametrosDuplicidad);
 
         switch($Duplicidad){
             case true:
                 try {
-                    $Query = DB::table('sysdev.areas')
+                    $Query = DB::table('sysdev.rm_areas')
                                 ->where('id', $Id)
                                 ->update([
                                         'name' => $Nombre
@@ -80,7 +80,7 @@ class AreasModel extends Model
         $Id     = $Parametros['Id'];
         $Accion = $Parametros['Accion'];
         try {
-        $Query = DB::table('sysdev.areas')
+        $Query = DB::table('sysdev.rm_areas')
                    ->where('id', $Id)
                    ->update([
                             'status' => $Accion
@@ -92,7 +92,7 @@ class AreasModel extends Model
     }
 
     public function SeleccionarAreas(){
-        $Query = $this->from('sysdev.areas AS areas')
+        $Query = $this->from('sysdev.rm_areas AS areas')
                       ->join('sysdev.users AS Usuario', 'Usuario.id', '=', 'areas.user_id')
                       ->select('areas.id        AS Id', 
                                'areas.name      AS Nombre',
@@ -109,7 +109,7 @@ class AreasModel extends Model
 
     public function SeleccionarDAreas($Parametros){
         $Id = $Parametros['Id'];
-        $Query = $this->from('sysdev.areas AS areas')
+        $Query = $this->from('sysdev.rm_areas AS areas')
                       ->select('areas.id   AS Id', 
                                'areas.name AS Nombre'
                                )
@@ -119,7 +119,7 @@ class AreasModel extends Model
     }
 
     public function SeleccionarGAreas(){
-        $Query = $this->from('sysdev.areas AS areas')
+        $Query = $this->from('sysdev.rm_areas AS areas')
                       ->select('areas.id   AS Id', 
                                'areas.name AS Nombre'
                                )
@@ -141,7 +141,7 @@ class AreasModel extends Model
                         ['name', '=', trim(strtoupper($row))],
                         ['status_delete', '=', 1]
                         ];
-            $ParametrosDuplicidad = array('Tabla'     => 'sysdev.areas', 
+            $ParametrosDuplicidad = array('Tabla'     => 'sysdev.rm_areas', 
                                           'Condicion' => $Condicion);
             $Duplicidad = $this->ValidarDuplicidad($ParametrosDuplicidad);
     
@@ -160,7 +160,7 @@ class AreasModel extends Model
                     break;            
             }
         }
-        $Query = DB::table('sysdev.areas')
+        $Query = DB::table('sysdev.rm_areas')
                    ->insert($data);
         return $Query;
         } catch (\Throwable $th) {
@@ -171,7 +171,7 @@ class AreasModel extends Model
     public function Eliminar($Parametros){
         $Id     = $Parametros['Id'];
         try {
-        $Query = DB::table('sysdev.areas')
+        $Query = DB::table('sysdev.rm_areas')
                    ->where('id', $Id)
                    ->update([
                             'status' => 0,
@@ -199,6 +199,26 @@ class AreasModel extends Model
             return $Resultado;
         } catch (\Throwable $th) {
             return 'Error al validar duplicidad';
+        }        
+    }
+
+    public function ValidarPermiso($Parametros){
+        $IdUsuario = $Parametros['IdUsuario'];
+        $Permiso   = $Parametros['Permiso'];        
+        try {
+            $Count = DB::table('sysdev.model_has_roles as model')
+                       ->join('sysdev.roles as roles', 'model.role_id', '=', 'roles.id')
+                       ->join('sysdev.role_has_permissions as relRolPermiso', 'relRolPermiso.role_id', '=', 'roles.id')
+                       ->join('sysdev.permissions as permiso', 'permiso.id', '=', 'relRolPermiso.permission_id')
+                    ->where([['model_id',     '=', $IdUsuario],
+                             ['permiso.name', '=', $Permiso]])
+                    ->count();
+            if($Count > 0)
+                return $Count;
+            else    
+                return 'No tiene permiso';
+        } catch (\Throwable $th) {
+            return 'Error al validar permiso';
         }        
     }
 }
