@@ -10,13 +10,13 @@ class RiskAreaController extends Controller
 {
     public function Insertar(Request $request){
         $Nombre    = trim(strtoupper($request->input('Nombre')));
-        $IdRiesgo  = trim($request->input('IdRiesgo'));
         $IdArea    = trim($request->input('IdArea'));
+        $IdRiesgo  = json_decode($request->input('IdRiesgo'));
         $IdUsuario = $request->input('IdUsuario');
         
         $RiskAreaModel = new RiskAreaModel;
         $parametrosP = array('IdUsuario' =>$IdUsuario,
-                             'Permiso'   =>'crear relacion riesgo area');
+                             'Permiso'   =>'crear relacion area riesgo');
         $permiso = $RiskAreaModel->ValidarPermiso($parametrosP);
         if($permiso>0){
             $parametros = array('Nombre'    =>$Nombre,
@@ -38,18 +38,16 @@ class RiskAreaController extends Controller
     public function Modificar(Request $request){
         $Id        = $request->input('Id');
         $Nombre    = trim(strtoupper($request->input('Nombre')));
-        $IdRiesgo  = trim($request->input('IdRiesgo'));
         $IdArea    = trim($request->input('IdArea'));
         $IdUsuario = $request->input('IdUsuario');
 
         $RiskAreaModel = new RiskAreaModel;
         $parametrosP = array('IdUsuario' =>$IdUsuario,
-                             'Permiso'   =>'editar relacion riesgo area');
+                             'Permiso'   =>'editar relacion area riesgo');
         $permiso = $RiskAreaModel->ValidarPermiso($parametrosP);
         if($permiso>0){
             $parametros = array('Id'       =>$Id,
                                 'Nombre'   =>$Nombre,
-                                'IdRiesgo' =>$IdRiesgo,
                                 'IdArea'   =>$IdArea);
             $resultado = $RiskAreaModel->ModificarRiskArea($parametros);
         }
@@ -69,7 +67,7 @@ class RiskAreaController extends Controller
         
         $RiskAreaModel = new RiskAreaModel;
         $parametrosP = array('IdUsuario' =>$IdUsuario,
-                             'Permiso'   =>'eliminar relacion riesgo area');
+                             'Permiso'   =>'eliminar relacion area riesgo');
         $permiso = $RiskAreaModel->ValidarPermiso($parametrosP);
         if($permiso>0){
             $parametros = array('Id'     =>$Id,
@@ -89,7 +87,7 @@ class RiskAreaController extends Controller
         $IdUsuario   = $request->input('IdUsuario');
         $RiskAreaModel = new RiskAreaModel;
         $parametrosP = array('IdUsuario' =>$IdUsuario,
-                             'Permiso'   =>'ver relacion riesgo area');
+                             'Permiso'   =>'ver relacion area riesgo');
         $permiso = $RiskAreaModel->ValidarPermiso($parametrosP);
         if($permiso>0){
             $resultado = $RiskAreaModel->SeleccionarRiskArea();
@@ -109,7 +107,7 @@ class RiskAreaController extends Controller
                 
         $RiskAreaModel = new RiskAreaModel;
         $parametrosP = array('IdUsuario' =>$IdUsuario,
-                             'Permiso'   =>'ver relacion riesgo area');
+                             'Permiso'   =>'ver relacion area riesgo');
         $permiso = $RiskAreaModel->ValidarPermiso($parametrosP);
         if($permiso>0){
             $parametros = array('Id' =>$Id);
@@ -128,7 +126,7 @@ class RiskAreaController extends Controller
         $IdUsuario   = $request->input('IdUsuario');
         $RiskAreaModel = new RiskAreaModel;
         $parametrosP = array('IdUsuario' =>$IdUsuario,
-                             'Permiso'   =>'ver relacion riesgo area');
+                             'Permiso'   =>'ver relacion area riesgo');
         $permiso = $RiskAreaModel->ValidarPermiso($parametrosP);
         if($permiso>0){
             $resultado = $RiskAreaModel->SeleccionarGRiskArea();
@@ -147,7 +145,7 @@ class RiskAreaController extends Controller
         $IdUsuario = $request->input('IdUsuario');
         $RiskAreaModel = new RiskAreaModel;
         $parametrosP = array('IdUsuario' =>$IdUsuario,
-                             'Permiso'   =>'crear relacion riesgo area');
+                             'Permiso'   =>'crear relacion area riesgo');
         $permiso = $RiskAreaModel->ValidarPermiso($parametrosP);
         if($permiso>0){
             $parametros = array('Datos'     =>$Datos,
@@ -169,11 +167,57 @@ class RiskAreaController extends Controller
         
         $RiskAreaModel = new RiskAreaModel;
         $parametrosP = array('IdUsuario' =>$IdUsuario,
-                             'Permiso'   =>'eliminar relacion riesgo area');
+                             'Permiso'   =>'eliminar relacion area riesgo');
         $permiso = $RiskAreaModel->ValidarPermiso($parametrosP);
         if($permiso>0){
             $parametros = array('Id' =>$Id);
             $resultado = $RiskAreaModel->Eliminar($parametros);
+        }
+        else {
+            $resultado = $permiso;
+        }
+        $retono = array('Success' => 'true',
+                        'Message' => 'Consulta Exitosa',
+                        'Data'    => $resultado);
+        return $retono;
+    }
+
+    public function Agregar(Request $request){
+        $Id         = trim($request->input('Id'));
+        $IdRiesgo   = json_decode($request->input('IdRiesgo'));
+        $IdUsuario  = $request->input('IdUsuario');
+        
+        $RiskAreaModel = new RiskAreaModel;
+        $parametrosP = array('IdUsuario' =>$IdUsuario,
+                             'Permiso'   =>'crear relacion area riesgo');
+        $permiso = $RiskAreaModel->ValidarPermiso($parametrosP);
+        if($permiso>0){
+            $parametros = array('IdRiesgo'  =>$IdRiesgo,
+                                'Id'        =>$Id,
+                                'IdUsuario' =>$IdUsuario);
+            
+            $resultado = $RiskAreaModel->AgregarRiskAreas($parametros);
+        }
+        else {
+            $resultado = $permiso;
+        }
+        $retono = array('Success' => 'true',
+                        'Message' => 'Consulta Exitosa',
+                        'Data'    => $resultado);
+        return $retono;
+    }
+
+    public function Quitar(Request $request){
+        $IdRelacion  = json_decode($request->input('IdRelacion')); 
+        $IdUsuario   = $request->input('IdUsuario');
+
+        $RiskAreaModel = new RiskAreaModel;
+        $parametrosP = array('IdUsuario' =>$IdUsuario,
+                             'Permiso'   =>'eliminar relacion area riesgo');
+        $permiso = $RiskAreaModel->ValidarPermiso($parametrosP);
+        if($permiso>0){
+            $parametros = array('IdRelacion' =>$IdRelacion);
+            $resultado = $RiskAreaModel->QuitarRiskAreas($parametros);
         }
         else {
             $resultado = $permiso;
@@ -189,8 +233,8 @@ class RiskAreaController extends Controller
         $AreasModel = new AreasModel;
         $resultadoR = $RiskModel->SeleccionarGRisk();
         $resultadoA = $AreasModel->SeleccionarGAreas();
-        $resultado = array('Riesgos'       => $resultadoR,
-                           'Areas' => $resultadoA);
+        $resultado = array('Riesgos' => $resultadoR,
+                           'Areas'   => $resultadoA);
         $retono = array('Success' => 'true',
                         'Message' => 'Consulta Exitosa',
                         'Data'    => $resultado);

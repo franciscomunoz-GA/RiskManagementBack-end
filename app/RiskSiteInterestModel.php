@@ -7,43 +7,33 @@ use Illuminate\Database\Eloquent\Model;
 class RiskSiteInterestModel extends Model
 {
     public function InsertarRiskSitesInterest($Parametros){
-        $Nombre         = $Parametros['Nombre'];
         $IdRiesgo       = $Parametros['IdRiesgo'];
         $IdSitioInteres = $Parametros['IdSitioInteres'];
         $IdUsuario      = $Parametros['IdUsuario'];
         
-        $CondicionN = [
-            ['name', '=', $Nombre],
-            ['status_delete', '=', 1]
-        ];
         $CondicionR = [
-            ['risk_id', '=', $IdRiesgo],
             ['sites_of_interest_id', '=', $IdSitioInteres],
             ['status_delete', '=', 1]
         ];
-        $ParametrosDuplicidadN = array('Tabla'     => 'sysdev.rm_risk_sites_interest', 
-                                      'Condicion' => $CondicionN);
         $ParametrosDuplicidadR = array('Tabla'     => 'sysdev.rm_risk_sites_interest', 
                                       'Condicion' => $CondicionR);
-        $DuplicidadN = $this->ValidarDuplicidad($ParametrosDuplicidadN);
         $DuplicidadR = $this->ValidarDuplicidad($ParametrosDuplicidadR);
         $Duplicidad;
-        if(!$DuplicidadR && !$DuplicidadN){
+        if(!$DuplicidadR){
             $Duplicidad = 'Duplicidad';
-        }elseif(!$DuplicidadR){
-            $Duplicidad = 'Duplicidad Relacion';
-        }elseif(!$DuplicidadN){
-            $Duplicidad = 'Duplicidad Nombre';
         }else{
             try {
-                $Id = DB::table('sysdev.rm_risk_sites_interest')
-                        ->insertGetId(['name'                 => $Nombre,
-                                       'risk_id'              => $IdRiesgo,
-                                       'sites_of_interest_id' => $IdSitioInteres,
-                                       'user_id'              => $IdUsuario
-                                       ]);
-                
-                return $Id;
+                $data = [];
+                foreach ($IdRiesgo as $index => $row) {
+                    $Fila =['risk_id'              => $row,
+                            'sites_of_interest_id' => $IdSitioInteres,
+                            'user_id'              => $IdUsuario
+                            ];
+                        array_push($data, $Fila);
+                    }
+                $Query = DB::table('sysdev.rm_risk_sites_interest')
+                        ->insert($data);
+                return $Query;
             } catch (\Throwable $th) {
                 return 'Error al insertar';
             }
@@ -53,41 +43,29 @@ class RiskSiteInterestModel extends Model
 
     public function ModificarRiskSitesInterest($Parametros){
         $Id             = $Parametros['Id'];
-        $Nombre         = $Parametros['Nombre'];
-        $IdRiesgo       = $Parametros['IdRiesgo'];
         $IdSitioInteres = $Parametros['IdSitioInteres'];
-                
-        $CondicionN = [
-            ['name',          '=', $Nombre],
-            ['id',            '!=', $Id],
-            ['status_delete', '=', 1]
-        ];
+
+        $Uso = $this->from('sysdev.rm_uso_risk_sites_interest as URSI')
+                    ->whereIn('risk_sites_interes_id',$Id)
+                    ->count();
+                        
         $CondicionR = [
-            ['risk_id',              '=', $IdRiesgo],
             ['sites_of_interest_id', '=', $IdSitioInteres],
-            ['id',                   '!=', $Id],
             ['status_delete',        '=', 1]
         ];
-        $ParametrosDuplicidadN = array('Tabla'     => 'sysdev.rm_risk_sites_interest', 
-                                      'Condicion' => $CondicionN);
         $ParametrosDuplicidadR = array('Tabla'     => 'sysdev.rm_risk_sites_interest', 
                                       'Condicion' => $CondicionR);
-        $DuplicidadN = $this->ValidarDuplicidad($ParametrosDuplicidadN);
         $DuplicidadR = $this->ValidarDuplicidad($ParametrosDuplicidadR);
         $Duplicidad;
-        if(!$DuplicidadR && !$DuplicidadN){
+        if(!$DuplicidadR){
             $Duplicidad = 'Duplicidad';
-        }elseif(!$DuplicidadR){
-            $Duplicidad = 'Duplicidad Id Riesgo';
-        }elseif(!$DuplicidadN){
-            $Duplicidad = 'Duplicidad Nombre';
+        }elseif($Uso > 0){
+                $Duplicidad = 'Ya se encuentra en uso';
         }else{
             try {
                 $Query = DB::table('sysdev.rm_risk_sites_interest')
-                                ->where('id', $Id)
+                                ->whereIn('id',$Id)
                                 ->update([
-                                        'name'                 => $Nombre,
-                                        'risk_id'              => $IdRiesgo,
                                         'sites_of_interest_id' => $IdSitioInteres
                                         ]);
                 return $Query;
@@ -99,11 +77,11 @@ class RiskSiteInterestModel extends Model
     }
 
     public function ModificarEstatus($Parametros){
-        $Id     = $Parametros['Id'];
+        $Id     = $Parametros['Id'];  //Id Sitio Interes
         $Accion = $Parametros['Accion'];
         try {
         $Query = DB::table('sysdev.rm_risk_sites_interest')
-                   ->where('id', $Id)
+                   ->where('sites_of_interest_id', $Id)
                    ->update([
                             'status' => $Accion
                            ]);
@@ -114,49 +92,80 @@ class RiskSiteInterestModel extends Model
     }
 
     public function SeleccionarRiskSitesInterest(){
-        $Query = $this->from('sysdev.rm_risk_sites_interest as RSI')
-                      ->join('sysdev.rm_risks as Risk', 'Risk.id', '=', 'RSI.risk_id')
-                      ->join('sysdev.sites_of_interest as SI', 'SI.id', '=', 'RSI.sites_of_interest_id')
-                      ->join('sysdev.users as usuario', 'usuario.id', '=', 'RSI.user_id')
-                      ->select('RSI.id as Id', 
-                               'RSI.name as Nombre',
-                               'Risk.id_risk as RiesgoId',
-                               'Risk.name as RiesgoNombre',
+        $SubQuery = DB::table('sysdev.rm_uso_risk_sites_interest as URSI')
+                   ->select('URSI.risk_sites_interes_id as risk_sites_interes_id',
+                            DB::raw('count(URSI.id) as usa'))
+                   ->groupBy('URSI.risk_sites_interes_id');
+        
+        
+        $Query = $this->from('sysdev.rm_risk_sites_interest as RRSI')
+                      ->join('sysdev.sites_of_interest as SI', 'SI.id', '=', 'RRSI.sites_of_interest_id')
+                      ->join('sysdev.users as usuario', 'usuario.id', '=', 'RRSI.user_id')
+                      
+                      ->leftJoinSub($SubQuery, 'SubQuery', function ($join) {
+                                $join->on('RRSI.id', '=', 'SubQuery.risk_sites_interes_id');})
+                                                     
+                        ->select('SI.id as Id', 
                                'SI.name as SitioInteres',
-                               'usuario.name as Usuario',
-                               DB::raw('DATE_FORMAT(RSI.created_at, "%d/%m/%Y %r") as FechaCreacion'),
-                               DB::raw('DATE_FORMAT(RSI.update_at, "%d/%m/%Y %r") as FechaModificacion'),
-                               'RSI.status as Estatus'
+                               DB::raw('concat(cast(count(RRSI.risk_id) as UNSIGNED)," RIESGO(S)") as Riesgos'),
+                               DB::raw('max(usuario.name) as Usuario'),
+                               DB::raw('date_format(max(RRSI.created_at),"%d/%m/%Y %r") as Fecha'),
+                               DB::raw('min(RRSI.status) as Estatus'),
+                               DB::raw('count(SubQuery.usa) as usada')
                                )
-                      ->where([['RSI.status_delete', '=', 1]])
-                      ->orderBy('Nombre')
+                      ->where([['RRSI.status_delete', '=', 1]])
+                      ->groupBy('RRSI.sites_of_interest_id')
+                      ->orderBy('SitioInteres')
                       ->get();
         return $Query;
     }
 
     public function SeleccionarDRiskSitesInterest($Parametros){
         $Id = $Parametros['Id'];
-        $Query = $this->from('sysdev.rm_risk_sites_interest AS RSI')
-                      ->select('RSI.id        AS Id', 
-                               'RSI.name   AS Nombre',
-                               'RSI.risk_id      AS IdRisk',
-                               'RSI.sites_of_interest_id  AS IdSitesInterest'
-                               )                               
-                               
-                      ->where([['RSI.id', '=', $Id]]) 
+        $Query = $this->from('sysdev.rm_risk_sites_interest AS RRSI')
+                      ->join('sysdev.sites_of_interest as SI', 'SI.id', '=', 'RRSI.sites_of_interest_id')
+                      ->select('SI.id   AS IdSitesInterest', 
+                               'SI.name AS SitesInterest'
+                              )                               
+                      ->where([['RRSI.sites_of_interest_id', '=', $Id]]) 
+                      ->limit(1)
                       ->get();
-        return $Query;
+        
+        $data = [];
+        foreach ($Query as $index => $row) {
+        $Parametros = array('IdSitesInterest' => $row->IdSitesInterest);
+        $Riesgos = $this->ObtenerRiesgosXRelacion($Parametros);
+        $Fila = array('IdSitesInterest' => $row->IdSitesInterest,
+                      'SitesInterest'   => $row->SitesInterest,
+                      'Riesgos'          => $Riesgos);
+        $data[$index]=$Fila;
+        }
+
+        return $data;
     }
 
     public function SeleccionarGRiskSitesInterest(){
-        $Query = $this->from('sysdev.rm_risk_sites_interest AS RSI')
-                      ->select('RSI.id AS Id', 
-                               'RSI.name AS Nombre'
+        $Query = $this->from('sysdev.rm_risk_sites_interest as RSI')
+                      ->join('sysdev.sites_of_interest as SI','SI.id','=','RSI.sites_of_interest_id')
+                      ->select('RSI.sites_of_interest_id  as Id', 
+                               'SI.name as SitioInteres'
                                )
-                      ->where([['status', '=', 1]]) 
-                      ->orderBy('Nombre') 
+                      ->where([['RSI.status_delete', '=', 1]]) 
+                      ->groupBy('RSI.sites_of_interest_id')
+                      ->orderBy('SitioInteres') 
+
                       ->get();
-        return $Query;
+        $data = [];
+        foreach ($Query as $index => $row) {
+            $Parametros = array('IdSitesInterest' => $row->Id);
+            $Riesgos = $this->ObtenerRiesgosXRelacion($Parametros);
+            $Fila = array('Id'           => $row->Id,
+                            'SitioInteres' => $row->SitioInteres,
+                            'Riesgos'      => $Riesgos);
+            $data[$index]=$Fila;
+            }
+              
+        return $data;
     }
 
     public function ImportarRiskSitesInterest($Parametros){
@@ -164,14 +173,10 @@ class RiskSiteInterestModel extends Model
         $IdUsuario = $Parametros['IdUsuario'];
         $errores = [];
         $duplicados = [];
+        $correctos = [];
         $data = [];
         try {
         foreach ($Datos as $index => $row) {
-            $CondicionN = [
-                        ['name', '=', trim(strtoupper($row->Nombre))],
-                        ['status_delete', '=', 1]
-                        ];
-            
             $ParametrosR = array('Tabla' => 'sysdev.rm_risks', 
                                   'Texto' => $row->Riesgo);
             $IdR = $this->ObtenerId($ParametrosR);
@@ -190,17 +195,15 @@ class RiskSiteInterestModel extends Model
                             ['sites_of_interest_id', '=', $IdSI],
                             ['status_delete', '=', 1]
                             ];
-                $ParametrosDuplicidadN = array('Tabla'     => 'sysdev.rm_risk_sites_interest', 
-                                               'Condicion' => $CondicionN);
                 $ParametrosDuplicidadR = array('Tabla'     => 'sysdev.rm_risk_sites_interest', 
                                                'Condicion' => $CondicionR);        
-                $DuplicidadN = $this->ValidarDuplicidad($ParametrosDuplicidadN);
                 $DuplicidadR = $this->ValidarDuplicidad($ParametrosDuplicidadR);
-                if(!$DuplicidadR || !$DuplicidadN){
+                if(!$DuplicidadR){
                     array_push($duplicados, $row);
-                }else{    
-                        $Fila =['name'                 => trim($row->Nombre),
-                                'risk_id'              => $IdR,
+                }else{  
+                    array_push($correctos, $row);
+                     
+                        $Fila =['risk_id'              => $IdR,
                                 'sites_of_interest_id' => $IdSI,
                                 'user_id'              => $IdUsuario
                             ];
@@ -212,7 +215,7 @@ class RiskSiteInterestModel extends Model
                    ->insert($data);
         $retorno = array(
                         'Dato'       => $Query,
-                        'Correctos'  => $data,
+                        'Correctos'  => $correctos,
                         'Duplicados' => $duplicados,
                         'Errores'    => $errores
                     );
@@ -223,18 +226,73 @@ class RiskSiteInterestModel extends Model
     }
 
     public function Eliminar($Parametros){
-        $Id     = $Parametros['Id'];
+        $Id = $Parametros['Id']; //Id Sitio Interes
         try {
         $Query = DB::table('sysdev.rm_risk_sites_interest')
-                   ->where('id', $Id)
-                   ->update([
+                   ->where('sites_of_interest_id', $Id)
+                   ->delete();
+                   /*->update([
                             'status' => 0,
                             'status_delete'=> 0
-                           ]);
+                           ]);*/
             return $Query;
         } catch (\Throwable $th) {
             return 'Error al Eliminar';
         }
+    }
+
+    public function AgregarRiskSitesInterest($Parametros){
+        $IdRiesgo       = $Parametros['IdRiesgo'];
+        $IdSitioInteres = $Parametros['IdSitioInteres'];
+        $IdUsuario      = $Parametros['IdUsuario'];
+        
+        try {
+            $data = [];
+            $Duplicidad  = 0;
+            foreach ($IdRiesgo as $index => $row) {
+                $CondicionR = [
+                    ['sites_of_interest_id', '=', $IdSitioInteres],
+                    ['risk_id', '=', $row],
+                    ['status_delete', '=', 1]
+                ];
+                $ParametrosDuplicidadR = array('Tabla'     => 'sysdev.rm_risk_sites_interest', 
+                                              'Condicion' => $CondicionR);
+                $DuplicidadR = $this->ValidarDuplicidad($ParametrosDuplicidadR);
+                if(!$DuplicidadR){
+                    $Duplicidad ++;
+                }else{
+                    $Fila =['risk_id'              => $row,
+                            'sites_of_interest_id' => $IdSitioInteres,
+                            'user_id'              => $IdUsuario
+                            ];
+                        array_push($data, $Fila);
+                    }
+            }
+                $Query = DB::table('sysdev.rm_risk_sites_interest')
+                        ->insert($data);
+                return $Query;
+            } catch (\Throwable $th) {
+                return 'Error al agregar';
+            }
+        return $Query;
+    }
+
+    public function QuitarRiskSitesInterest($Parametros){
+        $IdRelacion = $Parametros['IdRelacion'];
+                
+        try {
+            $Query = DB::table('sysdev.rm_risk_sites_interest')
+                        ->whereIn('id',$IdRelacion)
+                        ->update([
+                            'status_delete' => 0,
+                            'status' =>0
+                            ]);
+                return $Query;
+            } catch (\Throwable $th) {
+                return 'Error al quitar';
+            }
+        
+        return $Duplicidad;
     }
 
     private function ValidarDuplicidad($Parametros){
@@ -320,5 +378,31 @@ class RiskSiteInterestModel extends Model
         } catch (\Throwable $th) {
             return 'Error al validar permiso';
         }        
+    }
+
+    private function ObtenerRiesgosXRelacion($parametros){
+        $IdSitesInterest = $parametros['IdSitesInterest'];
+        $SubQuery = DB::table('sysdev.rm_uso_risk_sites_interest as URSI')
+                   ->select('URSI.risk_sites_interes_id as risk_sites_interes_id',
+                            DB::raw('count(URSI.id) as usa'))
+                   ->groupBy('URSI.risk_sites_interes_id');
+
+
+        $Riesgos = $this->from('sysdev.rm_risk_sites_interest as RSI')
+                        ->join('sysdev.rm_risks as Risk', 'Risk.id', '=', 'RSI.risk_id')
+
+                        ->leftJoinSub($SubQuery, 'SubQuery', function ($join) {
+                            $join->on('RSI.id', '=', 'SubQuery.risk_sites_interes_id');})
+                            
+
+                        ->select('RSI.id as Id',
+                                 'Risk.id as IdRiesgo', 
+                                 'Risk.name as Riesgo',
+                                 DB::raw('ifnull(SubQuery.usa,0) as usada'))
+                        ->where([['RSI.sites_of_interest_id', '=', $IdSitesInterest],
+                                 ['RSI.status_delete', '=', 1]])
+                        ->orderBy('Riesgo')                   
+                        ->get();
+        return $Riesgos;
     }
 }

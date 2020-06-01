@@ -70,21 +70,25 @@ Route::post('/Seleccionar/Risk',       'RiskController@Seleccionar');
 Route::post('/Seleccionar/RiskD',      'RiskController@SeleccionarDetalle');
 Route::post('/Seleccionar/RiskG',      'RiskController@SeleccionarGeneral');
 //RiskAreas
+Route::post('/Agregar/RelacionRA',          'RiskAreaController@Agregar');
 Route::post('/Eliminar/RelacionRA',         'RiskAreaController@Eliminar');
 Route::post('/Importador/RelacionRA',       'RiskAreaController@Importador');
 Route::post('/Insertar/RelacionRA',         'RiskAreaController@Insertar');
 Route::post('/Modificar/RelacionRA',        'RiskAreaController@Modificar');
 Route::post('/Modificar/RelacionRAEstatus', 'RiskAreaController@ModificarEstatus');
+Route::post('/Quitar/RelacionRA',           'RiskAreaController@Quitar');
 Route::post('/Seleccionar/CatalogosRA',     'RiskAreaController@Catalogos');
 Route::post('/Seleccionar/RelacionRA',      'RiskAreaController@Seleccionar');
 Route::post('/Seleccionar/RelacionRAD',     'RiskAreaController@SeleccionarDetalle');
 Route::post('/Seleccionar/RelacionRAG',     'RiskAreaController@SeleccionarGeneral');
 //RiskSiteInterest 
+Route::post('/Agregar/RelacionRSI',         'RiskSiteInterestController@Agregar');
 Route::post('/Eliminar/RelacionRSI',         'RiskSiteInterestController@Eliminar');
 Route::post('/Importador/RelacionRSI',       'RiskSiteInterestController@Importador');
 Route::post('/Insertar/RelacionRSI',         'RiskSiteInterestController@Insertar');
 Route::post('/Modificar/RelacionRSI',        'RiskSiteInterestController@Modificar');
 Route::post('/Modificar/RelacionRSIEstatus', 'RiskSiteInterestController@ModificarEstatus');
+Route::post('/Quitar/RelacionRSI',         'RiskSiteInterestController@Quitar');
 Route::post('/Seleccionar/CatalogosRSI',     'RiskSiteInterestController@Catalogos');
 Route::post('/Seleccionar/RelacionRSI',      'RiskSiteInterestController@Seleccionar');
 Route::post('/Seleccionar/RelacionRSID',     'RiskSiteInterestController@SeleccionarDetalle');

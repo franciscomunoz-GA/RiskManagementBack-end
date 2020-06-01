@@ -9,9 +9,8 @@ use Illuminate\Http\Request;
 class RiskSiteInterestController extends Controller
 {
     public function Insertar(Request $request){
-        $Nombre         = trim(strtoupper($request->input('Nombre')));
-        $IdRiesgo       = trim($request->input('IdRiesgo'));
         $IdSitioInteres = trim($request->input('IdSitioInteres'));
+        $IdRiesgo       = json_decode($request->input('IdRiesgo'));
         $IdUsuario      = $request->input('IdUsuario');
         
         $RiskSiteInterestModel = new RiskSiteInterestModel;
@@ -19,8 +18,7 @@ class RiskSiteInterestController extends Controller
                              'Permiso'   =>'crear relacion riesgo sitio interes');
         $permiso = $RiskSiteInterestModel->ValidarPermiso($parametrosP);
         if($permiso>0){
-            $parametros = array('Nombre'         =>$Nombre,
-                                'IdRiesgo'       =>$IdRiesgo,
+            $parametros = array('IdRiesgo'       =>$IdRiesgo,
                                 'IdSitioInteres' =>$IdSitioInteres,
                                 'IdUsuario'      =>$IdUsuario);
             
@@ -36,10 +34,8 @@ class RiskSiteInterestController extends Controller
     }
 
     public function Modificar(Request $request){
-        $Id          = $request->input('Id');
-        $Nombre         = trim(strtoupper($request->input('Nombre')));
-        $IdRiesgo       = trim($request->input('IdRiesgo'));
         $IdSitioInteres = trim($request->input('IdSitioInteres'));
+        $Id             = json_decode($request->input('Id'));
         $IdUsuario      = $request->input('IdUsuario');
 
         $RiskSiteInterestModel = new RiskSiteInterestModel;
@@ -48,8 +44,6 @@ class RiskSiteInterestController extends Controller
         $permiso = $RiskSiteInterestModel->ValidarPermiso($parametrosP);
         if($permiso>0){
             $parametros = array('Id'             =>$Id,
-                                'Nombre'         =>$Nombre,
-                                'IdRiesgo'       =>$IdRiesgo,
                                 'IdSitioInteres' =>$IdSitioInteres);
             $resultado = $RiskSiteInterestModel->ModificarRiskSitesInterest($parametros);
         }
@@ -63,8 +57,8 @@ class RiskSiteInterestController extends Controller
     }
 
     public function ModificarEstatus(Request $request){
-        $Id     = $request->input('Id');
-        $Accion = $request->input('Accion');
+        $Id          = $request->input('Id'); //Id Sitio interes
+        $Accion      = $request->input('Accion');
         $IdUsuario   = $request->input('IdUsuario');
         
         $RiskSiteInterestModel = new RiskSiteInterestModel;
@@ -104,7 +98,7 @@ class RiskSiteInterestController extends Controller
     }
 
     public function SeleccionarDetalle(Request $request){
-        $Id        = $request->input('Id');
+        $Id        = $request->input('Id'); //Id Sitio interes
         $IdUsuario = $request->input('IdUsuario');
                 
         $RiskSiteInterestModel = new RiskSiteInterestModel;
@@ -131,7 +125,8 @@ class RiskSiteInterestController extends Controller
                              'Permiso'   =>'ver relacion riesgo sitio interes');
         $permiso = $RiskSiteInterestModel->ValidarPermiso($parametrosP);
         if($permiso>0){
-            $resultado = $RiskSiteInterestModel->SeleccionarGRiskSitesInterest();
+            $SitiosInteres = $RiskSiteInterestModel->SeleccionarGRiskSitesInterest();
+            $resultado = array('SitiosInteres' => $SitiosInteres);
         }
         else {
             $resultado = $permiso;
@@ -164,8 +159,8 @@ class RiskSiteInterestController extends Controller
     }
 
     public function Eliminar(Request $request){
-        $Id = $request->input('Id');
-        $IdUsuario   = $request->input('IdUsuario');
+        $Id        = $request->input('Id'); //Id Sitio Interes
+        $IdUsuario = $request->input('IdUsuario');
         
         $RiskSiteInterestModel = new RiskSiteInterestModel;
         $parametrosP = array('IdUsuario' =>$IdUsuario,
@@ -174,6 +169,52 @@ class RiskSiteInterestController extends Controller
         if($permiso>0){
             $parametros = array('Id' =>$Id);
             $resultado = $RiskSiteInterestModel->Eliminar($parametros);
+        }
+        else {
+            $resultado = $permiso;
+        }
+        $retono = array('Success' => 'true',
+                        'Message' => 'Consulta Exitosa',
+                        'Data'    => $resultado);
+        return $retono;
+    }
+
+    public function Agregar(Request $request){
+        $IdSitioInteres = trim($request->input('IdSitioInteres'));
+        $IdRiesgo       = json_decode($request->input('IdRiesgo'));
+        $IdUsuario      = $request->input('IdUsuario');
+        
+        $RiskSiteInterestModel = new RiskSiteInterestModel;
+        $parametrosP = array('IdUsuario' =>$IdUsuario,
+                             'Permiso'   =>'crear relacion riesgo sitio interes');
+        $permiso = $RiskSiteInterestModel->ValidarPermiso($parametrosP);
+        if($permiso>0){
+            $parametros = array('IdRiesgo'       =>$IdRiesgo,
+                                'IdSitioInteres' =>$IdSitioInteres,
+                                'IdUsuario'      =>$IdUsuario);
+            
+            $resultado = $RiskSiteInterestModel->AgregarRiskSitesInterest($parametros);
+        }
+        else {
+            $resultado = $permiso;
+        }
+        $retono = array('Success' => 'true',
+                        'Message' => 'Consulta Exitosa',
+                        'Data'    => $resultado);
+        return $retono;
+    }
+
+    public function Quitar(Request $request){
+        $IdRelacion  = json_decode($request->input('IdRelacion')); 
+        $IdUsuario   = $request->input('IdUsuario');
+
+        $RiskSiteInterestModel = new RiskSiteInterestModel;
+        $parametrosP = array('IdUsuario' =>$IdUsuario,
+                             'Permiso'   =>'eliminar relacion riesgo sitio interes');
+        $permiso = $RiskSiteInterestModel->ValidarPermiso($parametrosP);
+        if($permiso>0){
+            $parametros = array('IdRelacion' =>$IdRelacion);
+            $resultado = $RiskSiteInterestModel->QuitarRiskSitesInterest($parametros);
         }
         else {
             $resultado = $permiso;

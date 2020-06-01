@@ -16,35 +16,30 @@ class RiskAreaModel extends Model
             ['name', '=', $Nombre],
             ['status_delete', '=', 1]
         ];
-        $CondicionR = [
-            ['risk_id', '=', $IdRiesgo],
-            ['area_id', '=', $IdArea],
-            ['status_delete', '=', 1]
-        ];
-        $ParametrosDuplicidadN = array('Tabla'     => 'sysdev.rm_risk_areas', 
+        $ParametrosDuplicidadN = array('Tabla'     => 'sysdev.rm_nombre_areas', 
                                       'Condicion' => $CondicionN);
-        $ParametrosDuplicidadR = array('Tabla'     => 'sysdev.rm_risk_areas', 
-                                      'Condicion' => $CondicionR);
+        
         $DuplicidadN = $this->ValidarDuplicidad($ParametrosDuplicidadN);
-        $DuplicidadR = $this->ValidarDuplicidad($ParametrosDuplicidadR);
         $Duplicidad;
-        if(!$DuplicidadR && !$DuplicidadN){
-            $Duplicidad = 'Duplicidad';
-        }elseif(!$DuplicidadR){
-            $Duplicidad = 'Duplicidad Relacion';
-        }elseif(!$DuplicidadN){
+        if(!$DuplicidadN){
             $Duplicidad = 'Duplicidad Nombre';
         }else{
             try {
-                $Id = DB::table('sysdev.rm_risk_areas')
+                $Id = DB::table('sysdev.rm_nombre_areas')
                         ->insertGetId(['name'    => $Nombre,
-                                       'risk_id' => $IdRiesgo,
                                        'area_id' => $IdArea,
                                        'user_id' => $IdUsuario
                                        ]);
+                $ParametrosAgregar = array('Id'        => $Id,
+                                           'IdRiesgo'  => $IdRiesgo,
+                                           'IdUsuario' => $IdUsuario);
+                $Query = $this->AgregarRiesgos($ParametrosAgregar);
                 
                 return $Id;
             } catch (\Throwable $th) {
+                DB::table('sysdev.rm_nombre_areas')
+                    ->where('id', '=', $Id)
+                    ->delete();
                 return 'Error al insertar';
             }
         }
@@ -54,40 +49,33 @@ class RiskAreaModel extends Model
     public function ModificarRiskArea($Parametros){
         $Id       = $Parametros['Id'];
         $Nombre   = $Parametros['Nombre'];
-        $IdRiesgo = $Parametros['IdRiesgo'];
         $IdArea   = $Parametros['IdArea'];
+
+        $Uso = DB::table('sysdev.rm_uso_risk_sites_interest as URSI')
+                   ->where('nombre_area_id',$Id)
+                   ->count();
                 
         $CondicionN = [
             ['name',          '=', $Nombre],
             ['id',            '!=', $Id],
             ['status_delete', '=', 1]
         ];
-        $CondicionR = [
-            ['risk_id',      '=', $IdRiesgo],
-            ['area_id',      '=', $IdArea],
-            ['id',           '!=', $Id],
-            ['status_delete','=', 1]
-        ];
-        $ParametrosDuplicidadN = array('Tabla'     => 'sysdev.rm_risk_areas', 
+        $ParametrosDuplicidadN = array('Tabla'     => 'sysdev.rm_nombre_areas', 
                                       'Condicion' => $CondicionN);
-        $ParametrosDuplicidadR = array('Tabla'     => 'sysdev.rm_risk_areas', 
-                                      'Condicion' => $CondicionR);
+        
         $DuplicidadN = $this->ValidarDuplicidad($ParametrosDuplicidadN);
-        $DuplicidadR = $this->ValidarDuplicidad($ParametrosDuplicidadR);
+       
         $Duplicidad;
-        if(!$DuplicidadR && !$DuplicidadN){
+        if(!$DuplicidadN){
             $Duplicidad = 'Duplicidad';
-        }elseif(!$DuplicidadR){
-            $Duplicidad = 'Duplicidad Relacion';
-        }elseif(!$DuplicidadN){
-            $Duplicidad = 'Duplicidad Nombre';
+        }elseif($Uso > 0){
+            $Duplicidad = 'Ya se encuentra en uso';
         }else{
             try {
-                $Query = DB::table('sysdev.rm_risk_areas')
+                $Query = DB::table('sysdev.rm_nombre_areas')
                                 ->where('id', $Id)
                                 ->update([
                                         'name'    => $Nombre,
-                                        'risk_id' => $IdRiesgo,
                                         'area_id' => $IdArea
                                         ]);
                 return $Query;
@@ -102,7 +90,7 @@ class RiskAreaModel extends Model
         $Id     = $Parametros['Id'];
         $Accion = $Parametros['Accion'];
         try {
-        $Query = DB::table('sysdev.rm_risk_areas')
+        $Query = DB::table('sysdev.rm_nombre_areas')
                    ->where('id', $Id)
                    ->update([
                             'status' => $Accion
@@ -114,21 +102,33 @@ class RiskAreaModel extends Model
     }
 
     public function SeleccionarRiskArea(){
-        $Query = $this->from('sysdev.rm_risk_areas as RA')
-                      ->join('sysdev.rm_risks as Risk', 'Risk.id', '=', 'RA.risk_id')
-                      ->join('sysdev.rm_areas as Areas', 'Areas.id', '=', 'RA.area_id')
-                      ->join('sysdev.users as usuario', 'usuario.id', '=', 'RA.user_id')
-                      ->select('RA.id as Id', 
-                               'RA.name as Nombre',
-                               'Risk.id_risk as RiesgoId',
-                               'Risk.name as RiesgoNombre',
-                               'Areas.name as Area',
-                               'usuario.name as Usuario',
-                               DB::raw('DATE_FORMAT(RA.created_at, "%d/%m/%Y %r") as FechaCreacion'),
-                               DB::raw('DATE_FORMAT(RA.update_at, "%d/%m/%Y %r") as FechaModificacion'),
-                               'RA.status as Estatus'
+        $SubQuery = DB::table('sysdev.rm_uso_risk_sites_interest as URSI')
+                   ->select('URSI.nombre_area_id as nombre_area_id',
+                            DB::raw('count(URSI.id) as usa'))
+                   ->groupBy('URSI.nombre_area_id');
+        
+        
+        $Query = $this->from('sysdev.rm_nombre_areas as NA')
+                      ->join('sysdev.rm_areas as Areas', 'Areas.id', '=', 'NA.area_id')
+                      ->join('sysdev.users as Usuario', 'Usuario.id', '=', 'NA.user_id')
+                      ->leftjoin('sysdev.rm_nombre_areas_risks as NAR', 'NAR.nombre_areas_id', '=', 'NA.id')
+                      
+                      ->leftJoinSub($SubQuery, 'SubQuery', function ($join) {
+                                $join->on('NA.id', '=', 'SubQuery.nombre_area_id');})
+                                                     
+                        ->select('NA.id as Id', 
+                               'NA.name as Nombre',
+                               'Areas.id as IdArea',
+                               'Areas.name as NombreArea',
+                               DB::raw('concat(cast(count(NAR.id) as UNSIGNED)," RIESGO(S)") as Riesgos'),
+                               DB::raw('max(Usuario.name) as Usuario'),
+                               DB::raw('date_format(max(NA.created_at),"%d/%m/%Y %r") as Fecha'),
+                               DB::raw('min(NA.status) as Estatus'),
+                               DB::raw('count(SubQuery.usa) as usada')
                                )
-                      ->where([['RA.status_delete', '=', 1]])
+                      ->where([['NA.status_delete', '=', 1],
+                                ['NAR.status_delete', '=', 1]])
+                      ->groupBy('NA.id')
                       ->orderBy('Nombre')
                       ->get();
         return $Query;
@@ -136,22 +136,33 @@ class RiskAreaModel extends Model
 
     public function SeleccionarDRiskArea($Parametros){
         $Id = $Parametros['Id'];
-        $Query = $this->from('sysdev.rm_risk_areas AS RA')
-                      ->select('RA.id       AS Id', 
-                               'RA.name     AS Nombre',
-                               'RA.risk_id  AS IdRisk',
-                               'RA.area_id  AS IdArea'
-                               )                               
-                               
-                      ->where([['RA.id', '=', $Id]]) 
+        $Query = $this->from('sysdev.rm_nombre_areas as NA')
+                      ->select('NA.id   AS Id', 
+                               'NA.name AS Nombre',
+                               'NA.area_id as IdArea'
+                              )                               
+                      ->where([['NA.id', '=', $Id]]) 
+                      ->limit(1)
                       ->get();
-        return $Query;
+        
+        $data = [];
+        foreach ($Query as $index => $row) {
+        $Parametros = array('Id' => $row->Id);
+        $Riesgos = $this->ObtenerRiesgosXRelacion($Parametros);
+        $Fila = array('Id'      => $row->Id,
+                      'Nombre'  => $row->Nombre,
+                      'IdArea'  => $row->IdArea,
+                      'Riesgos' => $Riesgos);
+        $data[$index]=$Fila;
+        }
+
+        return $data;
     }
 
     public function SeleccionarGRiskArea(){
-        $Query = $this->from('sysdev.rm_risk_areas AS RA')
-                      ->select('RA.id AS Id', 
-                               'RA.name AS Nombre'
+        $Query = $this->from('sysdev.rm_nombre_areas AS NA')
+                      ->select('NA.id AS Id', 
+                               'NA.name AS Nombre'
                                )
                       ->where([['status', '=', 1]]) 
                       ->orderBy('Nombre') 
@@ -164,54 +175,82 @@ class RiskAreaModel extends Model
         $IdUsuario = $Parametros['IdUsuario'];
         $errores = [];
         $duplicados = [];
+        $correctos = [];
         $data = [];
         try {
         foreach ($Datos as $index => $row) {
-            $CondicionN = [
-                        ['name', '=', trim(strtoupper($row->Nombre))],
-                        ['status_delete', '=', 1]
-                        ];
+            $ParametrosA = array('Tabla' => 'sysdev.rm_areas', 
+                                  'Texto' => $row->Area);
+            $IdA = $this->ObtenerId($ParametrosA);
             
             $ParametrosR = array('Tabla' => 'sysdev.rm_risks', 
                                   'Texto' => $row->Riesgo);
             $IdR = $this->ObtenerId($ParametrosR);
 
-            $ParametrosA = array(  'Tabla' => 'sysdev.rm_areas', 
-                                    'Texto' => $row->Area);
-            $IdA = $this->ObtenerId($ParametrosA);
-            
             if (empty($IdR) || empty($IdA) ){
                 array_push($errores, $row);
             }
             else {
-                $CondicionR = [
-                            ['risk_id', '=', $IdR],
-                            ['area_id', '=', $IdA],
-                            ['status_delete', '=', 1]
+            
+            $ParametrosNA = array(  'Tabla' => 'sysdev.rm_nombre_areas', 
+                                    'Texto' => [['name', '=', trim(strtoupper($row->Nombre))],
+                                                ['area_id', '=', $IdA],
+                                                ['status_delete', '=', 1]]
+                                    );
+            $IdNA = $this->ObtenerIdCondicion($ParametrosNA);
+
+            if (empty($IdNA)){
+                $ParametrosN = array(  'Tabla' => 'sysdev.rm_nombre_areas', 
+                                        'Texto' => [['name', '=', trim(strtoupper($row->Nombre))],
+                                                    ['status_delete', '=', 1]]
+                                    );
+                $IdN = $this->ObtenerIdCondicion($ParametrosN);
+
+                if(empty($IdN)){
+                    $IdNA = DB::table('sysdev.rm_nombre_areas')
+                                ->insertGetId(['name'    => $row->Nombre,
+                                            'area_id' => $IdA,
+                                            'user_id' => $IdUsuario
+                                        ]);
+                    array_push($correctos, $row);
+                    $Fila =['nombre_areas_id' => $IdNA,
+                                'risk_id'     => $IdR,
+                                'user_id'     => $IdUsuario
                             ];
-                $ParametrosDuplicidadN = array('Tabla'     => 'sysdev.rm_risk_areas', 
-                                               'Condicion' => $CondicionN);
-                $ParametrosDuplicidadR = array('Tabla'     => 'sysdev.rm_risk_areas', 
-                                               'Condicion' => $CondicionR);        
-                $DuplicidadN = $this->ValidarDuplicidad($ParametrosDuplicidadN);
-                $DuplicidadR = $this->ValidarDuplicidad($ParametrosDuplicidadR);
-                if(!$DuplicidadR || !$DuplicidadN){
+                    array_push($data, $Fila);
+                }
+                else {
                     array_push($duplicados, $row);
-                }else{    
-                        $Fila =['name'    => trim($row->Nombre),
-                                'risk_id' => $IdR,
-                                'area_id' => $IdA,
-                                'user_id' => $IdUsuario
+                }
+            }
+            else {
+                $CondicionNAR = [
+                            ['nombre_areas_id', '=', $IdNA],
+                            ['risk_id',         '=', $IdR],
+                            ['status_delete',   '=', 1]
+                            ];
+                $ParametrosDuplicidadNAR = array('Tabla'     => 'sysdev.rm_nombre_areas_risks', 
+                                               'Condicion' => $CondicionNAR);        
+                $DuplicidadNAR = $this->ValidarDuplicidad($ParametrosDuplicidadNAR);
+                if(!$DuplicidadNAR){
+                    array_push($duplicados, $row);
+                }else{  
+                    array_push($correctos, $row);
+                     
+                        $Fila =['nombre_areas_id' => $IdNA,
+                                'risk_id'         => $IdR,
+                                'user_id'         => $IdUsuario
                             ];
                         array_push($data, $Fila);
+                    }
                 }
             }
         }
-        $Query = DB::table('sysdev.rm_risk_areas')
+        $Query = DB::table('sysdev.rm_nombre_areas_risks')
                    ->insert($data);
         $retorno = array(
                         'Dato'       => $Query,
-                        'Correctos'  => $data,
+                        'Correctos'  => $correctos,
                         'Duplicados' => $duplicados,
                         'Errores'    => $errores
                     );
@@ -224,7 +263,7 @@ class RiskAreaModel extends Model
     public function Eliminar($Parametros){
         $Id     = $Parametros['Id'];
         try {
-        $Query = DB::table('sysdev.rm_risk_areas')
+        $Query = DB::table('sysdev.rm_nombre_areas')
                    ->where('id', $Id)
                    ->update([
                             'status' => 0,
@@ -278,6 +317,72 @@ class RiskAreaModel extends Model
             return '';
         }
     }
+
+    private function ObtenerIdCondicion($Parametros){
+        $Tabla = $Parametros['Tabla'];
+        $Condicion = $Parametros['Texto'];
+       
+        try {
+            $Query = $this->from($Tabla)
+                        ->select('id AS Id')
+                        ->where($Condicion) 
+                        ->limit(1)
+                        ->get();
+            if(empty($Query[0]['Id'])){
+                return '';
+            }
+            else
+            {
+                return $Query[0]['Id'];
+            }
+        } catch (\Throwable $th) {
+            return '';
+        }
+    }
+
+    private function AgregarRiesgos($Parametros){
+        $Id        = $Parametros['Id'];
+        $IdRiesgo  = $Parametros['IdRiesgo'];
+        $IdUsuario = $Parametros['IdUsuario'];
+        $data = [];
+       foreach ($IdRiesgo as $index => $row) {
+                $Fila =['nombre_areas_id' => $Id,
+                        'risk_id'         => $row,
+                        'user_id'         => $IdUsuario
+                        ];
+                    array_push($data, $Fila);
+                }
+        $Query = DB::table('sysdev.rm_nombre_areas_risks')
+                   ->insert($data);
+        return $Query;
+    }
+
+    private function ObtenerRiesgosXRelacion($parametros){
+        $Id = $parametros['Id'];
+        $SubQuery = DB::table('sysdev.rm_uso_risk_sites_interest as URSI')
+                   ->select('URSI.nombre_area_riesgo_id as nombre_area_riesgo_id',
+                            DB::raw('count(URSI.id) as usa'))
+                   ->groupBy('URSI.nombre_area_riesgo_id');
+
+
+        $Riesgos = $this->from('sysdev.rm_nombre_areas_risks as NAR')
+                        ->join('sysdev.rm_risks as Riesgos', 'Riesgos.id', '=', 'NAR.risk_id')
+
+                        ->leftJoinSub($SubQuery, 'SubQuery', function ($join) {
+                            $join->on('NAR.id', '=', 'SubQuery.nombre_area_riesgo_id');})
+                            
+
+                        ->select('NAR.id as idRelacion',
+                                 'Riesgos.id as IdRiesgo', 
+                                 'Riesgos.name as Riesgo',
+                                 DB::raw('ifnull(SubQuery.usa,0) as usada'))
+                        ->where([['NAR.nombre_areas_id', '=', $Id],
+                                 ['NAR.status_delete', '=', 1]])
+                        ->orderBy('Riesgo')                   
+                        ->get();
+        return $Riesgos;
+    }
+
     public function ValidarPermiso($Parametros){
         $IdUsuario = $Parametros['IdUsuario'];
         $Permiso   = $Parametros['Permiso'];        
@@ -296,5 +401,59 @@ class RiskAreaModel extends Model
         } catch (\Throwable $th) {
             return 'Error al validar permiso';
         }        
+    }
+
+    public function AgregarRiskAreas($Parametros){
+        $IdRiesgo  = $Parametros['IdRiesgo'];
+        $Id        = $Parametros['Id'];
+        $IdUsuario = $Parametros['IdUsuario'];
+        
+        try {
+            $data = [];
+            $Duplicidad  = 0;
+            foreach ($IdRiesgo as $index => $row) {
+                $CondicionR = [
+                    ['nombre_areas_id', '=', $Id],
+                    ['risk_id',       '=', $row],
+                    ['status_delete', '=', 1]
+                ];
+                $ParametrosDuplicidadR = array('Tabla'     => 'sysdev.rm_nombre_areas_risks', 
+                                              'Condicion' => $CondicionR);
+                $DuplicidadR = $this->ValidarDuplicidad($ParametrosDuplicidadR);
+                if(!$DuplicidadR){
+                    $Duplicidad ++;
+                }else{
+                    $Fila =['risk_id'         => $row,
+                            'nombre_areas_id' => $Id,
+                            'user_id'         => $IdUsuario
+                            ];
+                        array_push($data, $Fila);
+                    }
+            }
+                $Query = DB::table('sysdev.rm_nombre_areas_risks')
+                        ->insert($data);
+                return $Query;
+            } catch (\Throwable $th) {
+                return 'Error al agregar';
+            }
+        return $Query;
+    }
+
+    public function QuitarRiskAreas($Parametros){
+        $IdRelacion = $Parametros['IdRelacion'];
+                
+        try {
+            $Query = DB::table('sysdev.rm_nombre_areas_risks')
+                        ->whereIn('id',$IdRelacion)
+                        ->update([
+                            'status_delete' => 0,
+                            'status' =>0
+                            ]);
+                return $Query;
+            } catch (\Throwable $th) {
+                return 'Error al quitar';
+            }
+        
+        return $Duplicidad;
     }
 }
