@@ -45,8 +45,8 @@ class RiskSiteInterestModel extends Model
         $Id             = $Parametros['Id'];
         $IdSitioInteres = $Parametros['IdSitioInteres'];
 
-        $Uso = $this->from('sysdev.rm_uso_risk_sites_interest as URSI')
-                    ->whereIn('risk_sites_interes_id',$Id)
+        $Uso = $this->from('sysdev.rm_ratings_calendar_sites_interest as URSI')
+                    ->whereIn('risk_sites_interests_id',$Id)
                     ->count();
                         
         $CondicionR = [
@@ -92,10 +92,10 @@ class RiskSiteInterestModel extends Model
     }
 
     public function SeleccionarRiskSitesInterest(){
-        $SubQuery = DB::table('sysdev.rm_uso_risk_sites_interest as URSI')
-                   ->select('URSI.risk_sites_interes_id as risk_sites_interes_id',
+        $SubQuery = DB::table('sysdev.rm_ratings_calendar_sites_interest as URSI')
+                   ->select('URSI.risk_sites_interests_id as risk_sites_interes_id',
                             DB::raw('count(URSI.id) as usa'))
-                   ->groupBy('URSI.risk_sites_interes_id');
+                   ->groupBy('URSI.risk_sites_interests_id');
         
         
         $Query = $this->from('sysdev.rm_risk_sites_interest as RRSI')
@@ -155,17 +155,7 @@ class RiskSiteInterestModel extends Model
                       ->orderBy('SitioInteres') 
 
                       ->get();
-        $data = [];
-        foreach ($Query as $index => $row) {
-            $Parametros = array('IdSitesInterest' => $row->Id);
-            $Riesgos = $this->ObtenerRiesgosXRelacion($Parametros);
-            $Fila = array('Id'           => $row->Id,
-                            'SitioInteres' => $row->SitioInteres,
-                            'Riesgos'      => $Riesgos);
-            $data[$index]=$Fila;
-            }
-              
-        return $data;
+        return $Query;
     }
 
     public function ImportarRiskSitesInterest($Parametros){
@@ -226,16 +216,12 @@ class RiskSiteInterestModel extends Model
     }
 
     public function Eliminar($Parametros){
-        $Id = $Parametros['Id']; //Id Sitio Interes
+        $Id = $Parametros['Id'];
         try {
         $Query = DB::table('sysdev.rm_risk_sites_interest')
                    ->where('sites_of_interest_id', $Id)
                    ->delete();
-                   /*->update([
-                            'status' => 0,
-                            'status_delete'=> 0
-                           ]);*/
-            return $Query;
+                   return $Query;
         } catch (\Throwable $th) {
             return 'Error al Eliminar';
         }
@@ -382,10 +368,10 @@ class RiskSiteInterestModel extends Model
 
     private function ObtenerRiesgosXRelacion($parametros){
         $IdSitesInterest = $parametros['IdSitesInterest'];
-        $SubQuery = DB::table('sysdev.rm_uso_risk_sites_interest as URSI')
-                   ->select('URSI.risk_sites_interes_id as risk_sites_interes_id',
+        $SubQuery = DB::table('sysdev.rm_ratings_calendar_sites_interest as URSI')
+                   ->select('URSI.risk_sites_interests_id as risk_sites_interes_id',
                             DB::raw('count(URSI.id) as usa'))
-                   ->groupBy('URSI.risk_sites_interes_id');
+                   ->groupBy('URSI.risk_sites_interests_id');
 
 
         $Riesgos = $this->from('sysdev.rm_risk_sites_interest as RSI')

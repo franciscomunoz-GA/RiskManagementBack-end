@@ -24,4 +24,13 @@ class CatalogosController extends Controller
         return $retono;
     }
 
+    public function SeleccionarInspectores(){
+        $catalogoModel = new CatalogoModel;
+        $resultado = $catalogoModel->SeleccionarInspectoresG();
+        $retono = array('Success' => 'true',
+                        'Message' => 'Consulta Exitosa',
+                        'Data'    => $resultado);
+        return $retono;
+    }
+
 }

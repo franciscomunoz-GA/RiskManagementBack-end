@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 use App\RiskModel;
 use App\RiskTypesModel;
-//use App\AreasModel;
 use App\DimensionsModel;
 use App\LegalStandardsModel;
 use Illuminate\Http\Request;
@@ -16,13 +15,8 @@ class RiskController extends Controller
         $idDimension = $request->input('IdDimension');
         $idTRiesgo   = $request->input('IdTRiesgo');
         $idCLegales  = $request->input('IdCLegales');
-        //$idAreas     = $request->input('IdAreas');
         $idUsuario   = $request->input('IdUsuario');
         
-        /*if ($idAreas == 0 || empty($idAreas)){
-            $idAreas = null;
-        }*/
-
         $riskModel = new RiskModel;
         $parametrosP = array('IdUsuario' =>$idUsuario,
                              'Permiso'   =>'crear riesgos');
@@ -33,7 +27,6 @@ class RiskController extends Controller
                                 'IdDimension' =>$idDimension,
                                 'IdTRiesgo'   =>$idTRiesgo,
                                 'IdCLegales'  =>$idCLegales,
-                                //'IdAreas'     =>$idAreas,
                                 'IdUsuario'   =>$idUsuario);
             
             $resultado = $riskModel->InsertarRisk($parametros);
@@ -55,11 +48,7 @@ class RiskController extends Controller
         $idTRiesgo   = $request->input('IdTRiesgo');
         $idCLegales  = $request->input('IdCLegales');
         $idUsuario   = $request->input('IdUsuario');
-        //$idAreas     = $request->input('IdAreas');
         
-        /*if ($idAreas == 0 || empty($idAreas)){
-            $idAreas = null;
-        }     */  
         $riskModel = new RiskModel;
         $parametrosP = array('IdUsuario' =>$idUsuario,
                              'Permiso'   =>'editar riesgos');
@@ -71,7 +60,7 @@ class RiskController extends Controller
                                 'IdDimension' =>$idDimension,
                                 'IdTRiesgo'   =>$idTRiesgo,
                                 'IdCLegales'  =>$idCLegales);
-                                //'IdAreas'     =>$idAreas);
+                                
             $resultado = $riskModel->ModificarRisk($parametros);
         }
         else {
@@ -207,15 +196,12 @@ class RiskController extends Controller
 
     public function Catalogos(){
         $riskTypesModel = new RiskTypesModel;
-        //$areasModel = new AreasModel;
         $dimensionsModel = new DimensionsModel;
         $legalStandardsModel = new LegalStandardsModel;
         $resultadoRT = $riskTypesModel->SeleccionarGRiskTypes();
-        //$resultadoA  = $areasModel->SeleccionarGAreas();
         $resultadoD  = $dimensionsModel->SeleccionarGDimensions();
         $resultadoLS = $legalStandardsModel->SeleccionarGLegalStandard();
         $resultado = array('TiposRiesgos'     => $resultadoRT,
-                           //'Areas'            => $resultadoA,
                            'Dimensiones'      => $resultadoD,
                            'CriteriosLegales' => $resultadoLS);
         $retono = array('Success' => 'true',

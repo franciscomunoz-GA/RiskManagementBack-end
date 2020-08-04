@@ -116,15 +116,13 @@ class ClientsRiskAreaModel extends Model
     public function SeleccionarClientRiskArea(){
         $Query = $this->from('sysdev.rm_clients_risks_areas as RCRA')
                       ->join('sysdev.clients as Clients', 'Clients.id', '=', 'RCRA.client_id')
-                      ->join('sysdev.rm_risk_areas as RRA', 'RRA.id', '=', 'RCRA.risk_area_id')
-                      ->join('sysdev.rm_risks as Risk', 'Risk.id', '=', 'RRA.risk_id')
-                      ->join('sysdev.rm_areas as Areas', 'Areas.id', '=', 'RRA.area_id')
+                      ->join('sysdev.rm_nombre_areas as NA', 'NA.id', '=', 'RCRA.risk_area_id')
+                      ->join('sysdev.rm_areas as Areas', 'Areas.id', '=', 'NA.area_id')
                       ->join('sysdev.users as users', 'users.id', '=', 'RCRA.user_id')
                       ->select('RCRA.id as Id', 
                                'RCRA.name as Nombre',
                                'Clients.commercial_name as Cliente',
-                               'Risk.id_risk as RiesgoId',
-                               'Risk.name as RiesgoNombre',
+                               'NA.name as NombreRelacionAR',
                                'Areas.name as Area',
                                'users.name as Usuario',
                                DB::raw('DATE_FORMAT(RCRA.created_at, "%d/%m/%Y %r") as FechaCreacion'),
@@ -175,7 +173,7 @@ class ClientsRiskAreaModel extends Model
                         ['status_delete', '=', 1]
                         ];
             
-            $ParametrosR = array('Tabla' => 'sysdev.rm_risk_areas', 
+            $ParametrosR = array('Tabla' => 'sysdev.rm_nombre_areas', 
                                   'Texto' => $row->RiesgoArea);
             $IdR = $this->ObtenerId($ParametrosR);
 

@@ -12,7 +12,6 @@ class RiskModel extends Model
         $IdDimension = $Parametros['IdDimension'];
         $IdTRiesgo   = $Parametros['IdTRiesgo'];
         $IdCLegales  = $Parametros['IdCLegales'];
-        //$IdAreas     = $Parametros['IdAreas'];
         $IdUsuario   = $Parametros['IdUsuario'];       
         
         $CondicionN = [
@@ -44,7 +43,6 @@ class RiskModel extends Model
                                        'dimension_id'      => $IdDimension,
                                        'risk_type_id'      => $IdTRiesgo,
                                        'legal_standard_id' => $IdCLegales,
-                                       //'area_id'           => $IdAreas,
                                        'user_id'           => $IdUsuario
                                       ]);
                 
@@ -63,7 +61,6 @@ class RiskModel extends Model
         $IdDimension = $Parametros['IdDimension'];
         $IdTRiesgo   = $Parametros['IdTRiesgo'];
         $IdCLegales  = $Parametros['IdCLegales'];
-        //$IdAreas     = $Parametros['IdAreas'];
         
         $CondicionN = [
             ['name',          '=', $Nombre],
@@ -98,7 +95,6 @@ class RiskModel extends Model
                                         'dimension_id'      => $IdDimension,
                                         'risk_type_id'      => $IdTRiesgo,
                                         'legal_standard_id' => $IdCLegales
-                                        //'area_id'           => $IdAreas,
                                         ]);
                 return $Query;
             } catch (\Throwable $th) {
@@ -129,14 +125,12 @@ class RiskModel extends Model
                       ->join('sysdev.rm_dimensions AS dimension', 'dimension.id', '=', 'risk.dimension_id')
                       ->join('sysdev.rm_legal_standards AS LS', 'LS.id', '=', 'risk.legal_standard_id')
                       ->join('sysdev.rm_risk_types AS RT', 'RT.id', '=', 'risk.risk_type_id')
-                      //->leftJoin('sysdev.rm_areas AS Areas', 'Areas.id', '=', 'risk.area_id')
                       ->select('risk.id        AS Id', 
                                'risk.id_risk   AS IdRiesgo',
                                'risk.name      AS Nombre',
                                'dimension.name      AS Dimension',
                                'LS.name      AS CriteriosLegales',
                                'RT.name      AS TiposRiesgos',
-                               //DB::raw('ifnull(Areas.name,"-") AS Areas'),
                                'Usuario.name AS Usuario',
                                DB::raw('DATE_FORMAT(risk.created_at, "%d/%m/%Y %r") as FechaCreacion'),
                                DB::raw('DATE_FORMAT(risk.update_at, "%d/%m/%Y %r") as FechaModificacion'),
@@ -157,7 +151,6 @@ class RiskModel extends Model
                                'risk.dimension_id  AS IdDimension',
                                'risk.risk_type_id      AS IdTiposRiesgos',
                                'risk.legal_standard_id      AS IdCriteriosLegales')
-                               //'risk.area_id  AS IdAreas')                               
                                
                       ->where([['risk.id', '=', $Id]]) 
                       ->get();
@@ -167,7 +160,6 @@ class RiskModel extends Model
     public function SeleccionarGRisk(){
         $Query = $this->from('sysdev.rm_risks')
                       ->select('id AS Id', 
-                                // DB::raw('concat(id_risk," - ",name) as Riesgo')
                                 'id_risk AS Identificador',
                                 'name AS Nombre'
                                )
@@ -202,17 +194,7 @@ class RiskModel extends Model
             if(!$DuplicidadI || !$DuplicidadN){
                 array_push($duplicados, $row);
             }else{    
-                    /*if(!empty($row->Area)){
-                            
-                        $ParametrosArea = array('Tabla' => 'sysdev.rm_areas', 
-                                                'Texto' => $row->Area);
-                        
-                        $IdArea = $this->ObtenerId($ParametrosArea);
-                    }  
-                    else {
-                        $IdArea = null;
-                    }*/
-
+                    
                     $ParametrosLS = array('Tabla' => 'sysdev.rm_legal_standards', 
                                           'Texto' => $row->CriterioLegal);
                     $IdLS = $this->ObtenerId($ParametrosLS);
@@ -225,10 +207,7 @@ class RiskModel extends Model
                                                 'Texto' => $row->Dimension);
                     $IdDimension = $this->ObtenerId($ParametrosDimesion);
 
-                    /*if (empty($IdArea)){
-                        $IdArea = null;
-                   }*/
-
+                    
                     if (empty($IdLS) || empty($IdRT) || empty($IdDimension)){
                          array_push($errores, $row);
                     }
@@ -238,7 +217,6 @@ class RiskModel extends Model
                                 'dimension_id'      => $IdDimension,
                                 'risk_type_id'      => $IdRT,
                                 'legal_standard_id' => $IdLS,
-                                //'area_id'           => $IdArea,
                                 'user_id'           => $IdUsuario
                            ];
                     array_push($data, $Fila);

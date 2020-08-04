@@ -22,6 +22,8 @@ Route::post('/Actualizar/Seccion', 'loginController@AcutalizarSesion');
 Route::post('/Cerrar/Seccion',     'loginController@CerrarSesion');
 Route::post('/Validar/Usuario',    'loginController@validarUsuario');
 Route::post('/Sesion/Usuario',     'loginController@sesionUsuario');
+//Login Aplicacion
+Route::post('/Sesion/UsuarioAplicacion', 'LoginAplicacionController@SesionUsuario');
 //Areas
 Route::post('/Eliminar/Areas',         'AreasController@Eliminar');
 Route::post('/Importar/Areas',         'AreasController@Importador');
@@ -30,6 +32,13 @@ Route::post('/Modificar/Areas',        'AreasController@Modificar');
 Route::post('/Modificar/AreasEstatus', 'AreasController@ModificarEstatus');
 Route::post('/Seleccionar/Areas',      'AreasController@Seleccionar');
 Route::post('/Seleccionar/AreasD',     'AreasController@SeleccionarDetalle');
+//Calendario
+Route::post('/Insertar/Calendario',     'CalendarioController@Insertar');
+Route::post('/Seleccionar/CatalogosC', 'CalendarioController@Catalogos');
+Route::post('/Seleccionar/Calendario',      'CalendarioController@Seleccionar');
+//Cartesiano
+Route::post('/Modificar/Resultados',    'CartesianoController@ModificarRespuesta');
+Route::post('/Seleccionar/CartesianoD', 'CartesianoController@SeleccionarDetalle');
 //Catalogo
 Route::post('/Seleccionar/ClientsG',      'CatalogosController@SeleccionarClientG');
 Route::post('/Seleccionar/SiteInterestG', 'CatalogosController@SeleccionarSitesInterestG');
@@ -43,6 +52,10 @@ Route::post('/Seleccionar/CatalogosCRA',     'ClientsRiskAreaController@Catalogo
 Route::post('/Seleccionar/RelacionCRA',      'ClientsRiskAreaController@Seleccionar');
 Route::post('/Seleccionar/RelacionCRAD',     'ClientsRiskAreaController@SeleccionarDetalle');
 Route::post('/Seleccionar/RelacionCRAG',     'ClientsRiskAreaController@SeleccionarGeneral');
+//Encuesta
+Route::post('/Seleccionar/Encuestas', 'EncuestaAplicacionController@ServiciosXInspector');
+Route::post('/Seleccionar/EncuestaD', 'EncuestaAplicacionController@SeleccionarEncuesta');
+Route::post('/Responder/Encuesta',    'EncuestaAplicacionController@ResponderEncuesta');
 //Dimensions
 Route::post('/Eliminar/Dimensiones',         'DimensionsController@Eliminar');
 Route::post('/Importar/Dimensiones',         'DimensionsController@Importador');

@@ -51,7 +51,7 @@ class RiskAreaModel extends Model
         $Nombre   = $Parametros['Nombre'];
         $IdArea   = $Parametros['IdArea'];
 
-        $Uso = DB::table('sysdev.rm_uso_risk_sites_interest as URSI')
+        $Uso = DB::table('sysdev.rm_ratings_calendar_clients as URSI')
                    ->where('nombre_area_id',$Id)
                    ->count();
                 
@@ -102,7 +102,7 @@ class RiskAreaModel extends Model
     }
 
     public function SeleccionarRiskArea(){
-        $SubQuery = DB::table('sysdev.rm_uso_risk_sites_interest as URSI')
+        $SubQuery = DB::table('sysdev.rm_ratings_calendar_clients as URSI')
                    ->select('URSI.nombre_area_id as nombre_area_id',
                             DB::raw('count(URSI.id) as usa'))
                    ->groupBy('URSI.nombre_area_id');
@@ -359,10 +359,10 @@ class RiskAreaModel extends Model
 
     private function ObtenerRiesgosXRelacion($parametros){
         $Id = $parametros['Id'];
-        $SubQuery = DB::table('sysdev.rm_uso_risk_sites_interest as URSI')
-                   ->select('URSI.nombre_area_riesgo_id as nombre_area_riesgo_id',
+        $SubQuery = DB::table('sysdev.rm_ratings_calendar_clients as URSI')
+                   ->select('URSI.nombre_area_risk_id as nombre_area_riesgo_id',
                             DB::raw('count(URSI.id) as usa'))
-                   ->groupBy('URSI.nombre_area_riesgo_id');
+                   ->groupBy('URSI.nombre_area_risk_id');
 
 
         $Riesgos = $this->from('sysdev.rm_nombre_areas_risks as NAR')

@@ -88,9 +88,7 @@ class loginModel extends Model
                                                ]);
 
                     }
-                    /*$Fila  = array('Id'     => $row->Id,
-                                   'Nombre' => $row->Nombre);
-                    array_push($data, $Fila);*/
+                    
                     return $data;
                     break;
                 }
